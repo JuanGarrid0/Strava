@@ -9,6 +9,12 @@ public class Challenge {
     private Date endDate;
     private Double objectiveValue;
     private Sport sport;
+
+    
+    
+    public Challenge() {
+    }
+    
     public Challenge(Long idChallenge, String name, Date startDate, Date endDate, Double objectiveValue, Sport sport) {
         this.idChallenge = idChallenge;
         this.name = name;
@@ -54,8 +60,7 @@ public class Challenge {
         this.sport = sport;
     }
     public boolean isActive(){
-        boolean activity=true;
-        return activity;
+        return endDate != null && endDate.after(new Date());
     }
 
 }

@@ -5,7 +5,7 @@ import java.util.Date;
 import es.deusto.sd.strava.entity.*;
 
 // ChallengeRequest.java
-public class ChallengeRequest {
+public class CreationChallengeRequest {
     private String name;
     private Date startDate;
     private Date endDate;

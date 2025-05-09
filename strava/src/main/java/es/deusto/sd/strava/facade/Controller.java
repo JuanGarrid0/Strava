@@ -85,7 +85,7 @@ public class Controller {
     // ----------------------------------
 
     @PostMapping("/createSession")
-    public ResponseEntity<?> postStravaSession(@RequestBody SessionRequest sessionReq) {
+    public ResponseEntity<?> postStravaSession(@RequestBody CreationTrainingSessionRequest sessionReq) {
         // Ejemplo: sessionReq podría contener userId, title, sport, distance, etc.
         try {
             // Buscar user en tu repositorio (a través del servicio) si no lo recibes como objeto
@@ -119,7 +119,7 @@ public class Controller {
     // ----------------------------------
 
     @PostMapping("/createChallenge")
-    public ResponseEntity<?> postStravaChallenge(@RequestBody ChallengeRequest challengeReq) {
+    public ResponseEntity<?> postStravaChallenge(@RequestBody CreationChallengeRequest challengeReq) {
         try {
             Challenge challenge = challengeService.createChallenge(
                     challengeReq.getName(),

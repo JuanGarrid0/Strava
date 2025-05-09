@@ -7,7 +7,7 @@ import es.deusto.sd.strava.entity.*;
 
 
 
-public class SessionRequest {
+public class CreationTrainingSessionRequest {
     private Long userId;
     private String title;
     private Sport sport;

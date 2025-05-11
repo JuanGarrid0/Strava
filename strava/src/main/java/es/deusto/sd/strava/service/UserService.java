@@ -4,6 +4,7 @@ import es.deusto.sd.strava.dao.UserDao;
 import es.deusto.sd.strava.dto.*;
 import es.deusto.sd.strava.entity.User;
 import es.deusto.sd.strava.external.google.GoogleDao;
+import es.deusto.sd.strava.external.meta.MetaDao;
 import es.deusto.sd.strava.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,30 +19,37 @@ public class UserService {
     private final TokenService tokenService;
     private final UserMapper userMapper;
     private final GoogleDao googleDao;
+    private final MetaDao metaDao;
 
     @Autowired
     public UserService(UserDao userDao,
                        TokenService tokenService,
                        UserMapper userMapper,
-                       GoogleDao googleDao) {
+                       GoogleDao googleDao,
+                       MetaDao metaDao) {
         this.userDao = userDao;
         this.tokenService = tokenService;
         this.userMapper = userMapper;
         this.googleDao = googleDao;
+        this.metaDao = metaDao;
     }
 
     @Transactional
     public UserProfileDTO register(UserRegisterDTO dto) {
-        // Validate email with Google if provider is GOOGLE
+        // Validate email with external provider
         if (dto.getProvider() == AuthProvider.GOOGLE) {
             if (!googleDao.validateEmail(dto.getEmail())) {
                 throw new IllegalArgumentException("Email not registered with Google");
             }
+        } else if (dto.getProvider() == AuthProvider.META) {
+            boolean success = metaDao.registerUser(
+                dto.getEmail(), dto.getName(), dto.getBirthDate().toString());
+            if (!success) {
+                throw new IllegalArgumentException("Email already registered with Meta");
+            }
         }
-        // TODO: add Meta validation when MetaDao is available
-
         if (userDao.existsByEmail(dto.getEmail())) {
-            throw new IllegalArgumentException("Email already registered");
+            throw new IllegalArgumentException("Email already registered locally");
         }
         User user = userMapper.toEntity(dto);
         User saved = userDao.save(user);
@@ -50,14 +58,16 @@ public class UserService {
 
     @Transactional
     public TokenDTO login(UserLoginDTO dto) {
-        // Validate login with Google if provider is GOOGLE
+        // Validate login with external provider
         if (dto.getProvider() == AuthProvider.GOOGLE) {
             if (!googleDao.validateEmail(dto.getEmail())) {
                 throw new IllegalArgumentException("Invalid Google credentials");
             }
+        } else if (dto.getProvider() == AuthProvider.META) {
+            if (!metaDao.validateEmail(dto.getEmail())) {
+                throw new IllegalArgumentException("Invalid Meta credentials");
+            }
         }
-        // TODO: add Meta authentication when MetaDao is available
-
         Optional<User> opt = userDao.findByEmail(dto.getEmail());
         if (opt.isEmpty()) {
             throw new IllegalArgumentException("User not found");
@@ -75,11 +85,8 @@ public class UserService {
         tokenService.revokeToken(token);
     }
 
-    /**
-     * Retrieves the User associated with a valid token or throws if invalid.
-     */
     public User getUserFromToken(String token) {
         return tokenService.getUser(token)
-                .orElseThrow(() -> new SecurityException("Invalid or expired token"));
+            .orElseThrow(() -> new SecurityException("Invalid or expired token"));
     }
 }

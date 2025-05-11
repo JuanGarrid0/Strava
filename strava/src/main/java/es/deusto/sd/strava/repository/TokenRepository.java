@@ -1,53 +1,16 @@
 package es.deusto.sd.strava.repository;
 
-import es.deusto.sd.strava.entity.Token;
+import es.deusto.sd.strava.entity.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
-import java.util.*;
-
-public class TokenRepository {
-
-    private static final Map<Long, Token> tokenStorage = new HashMap<>();
-    private static long currentId = 1L;
-
-    /**
-     * Devuelve todos los tokens en memoria.
-     */
-    public List<Token> findAll() {
-        return new ArrayList<>(tokenStorage.values());
-    }
-
-    /**
-     * Busca un Token por su ID.
-     */
-    public Optional<Token> findById(Long id) {
-        return Optional.ofNullable(tokenStorage.get(id));
-    }
-
-    /**
-     * Crea o actualiza un Token en el repositorio en memoria.
-     * Si no tiene ID, se asigna automáticamente.
-     */
-    public Token save(Token token) {
-        if (token.getIdToken() == 0) {
-            token.setIdToken(currentId++);
-        }
-        tokenStorage.put(token.getIdToken(), token);
-        return token;
-    }
-
-    /**
-     * Elimina un Token por su ID.
-     */
-    public void deleteById(Long id) {
-        tokenStorage.remove(id);
-    }
-
-    /**
-     * Busca un Token por el valor de su token (valueToken).
-     */
-    public Optional<Token> findByValueToken(String valueToken) {
-        return tokenStorage.values().stream()
-                .filter(t -> t.getValueToken().equals(valueToken))
-                .findFirst();
-    }
+public interface TokenRepository extends JpaRepository<Token, Long> {
+    Optional<Token> findByValue(String value);
+    void deleteByValue(String value);
+    List<Token> findByUser(User user);
 }

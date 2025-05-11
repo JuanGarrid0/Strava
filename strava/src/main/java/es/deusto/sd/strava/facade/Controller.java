@@ -1,211 +1,142 @@
+// File: src/main/java/es/deusto/sd/strava/facade/Controller.java
 package es.deusto.sd.strava.facade;
 
-import es.deusto.sd.strava.entity.*;
-import es.deusto.sd.strava.service.ChallengeService;
-import es.deusto.sd.strava.service.TrainingSessionService;
-import es.deusto.sd.strava.service.UserService;
-import org.springframework.http.HttpStatus;
+import es.deusto.sd.strava.dto.*;
+import es.deusto.sd.strava.entity.User;
+import es.deusto.sd.strava.service.*;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import es.deusto.sd.strava.dto.*;
 
-import java.util.Date;
 import java.util.List;
 
-/**
- * Ejemplo de controlador REST sin usar JPA ni transacciones.
- * Depende de servicios con repositorios en memoria.
- */
 @RestController
-@RequestMapping("/api") // Opcional: prefijo general para tus endpoints
 public class Controller {
 
-    private final UserService userService;
-    private final TrainingSessionService trainingSessionService;
-    private final ChallengeService challengeService;
+    @RestController
+    @RequestMapping("/users")
+    public static class UserController {
+        private final UserService userService;
 
-    // Inyecta (o crea) los servicios. 
-    // Si no usas configuración de Spring Boot, podrías instanciarlos manualmente aquí.
-    public Controller(UserService userService,
-                      TrainingSessionService trainingSessionService,
-                      ChallengeService challengeService) {
-        this.userService = userService;
-        this.trainingSessionService = trainingSessionService;
-        this.challengeService = challengeService;
-    }
+        @Autowired
+        public UserController(UserService userService) {
+            this.userService = userService;
+        }
 
-    // --- EJEMPLOS DE ENDPOINTS ---
+        @PostMapping("/register")
+        public ResponseEntity<UserProfileDTO> register(
+                @Valid @RequestBody UserRegisterDTO dto) {
+            UserProfileDTO profile = userService.register(dto);
+            return ResponseEntity.ok(profile);
+        }
 
-    // ----------------------------------
-    //           LOGIN / LOGOUT
-    // ----------------------------------
+        @PostMapping("/login")
+        public ResponseEntity<TokenDTO> login(
+                @Valid @RequestBody UserLoginDTO dto) {
+            TokenDTO token = userService.login(dto);
+            return ResponseEntity.ok(token);
+        }
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        try {
-            Token token = userService.loginUser(
-                    request.getEmail(),
-                    request.getPassword(),
-                    request.isAuthFromExternal());
-            return ResponseEntity.ok("Logged in! Token: " + token.getValueToken());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+        @PostMapping("/logout")
+        public ResponseEntity<Void> logout(
+                @RequestHeader("Authorization") String tokenValue) {
+            userService.logout(tokenValue);
+            return ResponseEntity.noContent().build();
         }
     }
 
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout(@RequestBody String tokenValue) {
-        try {
-            userService.logoutUser(tokenValue);
-            return ResponseEntity.ok("Logged out successfully!");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+    @RestController
+    @RequestMapping("/sessions")
+    public static class TrainingSessionController {
+        private final TrainingSessionService sessionService;
+        private final UserService userService;
+
+        @Autowired
+        public TrainingSessionController(TrainingSessionService sessionService,
+                                         UserService userService) {
+            this.sessionService = sessionService;
+            this.userService = userService;
         }
-    }
 
-    // ----------------------------------
-    //           REGISTRO DE USER
-    // ----------------------------------
-
-    @PostMapping("/register")
-    public ResponseEntity<?> postRegister(@RequestBody RegisterRequest request) {
-        try {
-            User user = userService.registerUser(
-                    request.getEmail(),
-                    request.getName(),
-                    request.isValidFromExternalService());
-            return ResponseEntity.ok("User created with ID: " + user.getIdUser());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+        @PostMapping
+        public ResponseEntity<TrainingSessionDTO> create(
+                @RequestHeader("Authorization") String token,
+                @Valid @RequestBody TrainingSessionCreateDTO dto) {
+            User user = userService.getUserFromToken(token);
+            TrainingSessionDTO created = sessionService.create(dto, user);
+            return ResponseEntity.ok(created);
         }
-    }
 
-    // ----------------------------------
-    //       CREACIÓN DE SESIONES
-    // ----------------------------------
+        @GetMapping("/latest")
+        public ResponseEntity<List<TrainingSessionDTO>> getLatest(
+                @RequestHeader("Authorization") String token,
+                @RequestParam(defaultValue = "5") int limit) {
+            User user = userService.getUserFromToken(token);
+            List<TrainingSessionDTO> list = sessionService.getLatest(user, limit);
+            return ResponseEntity.ok(list);
+        }
 
-    @PostMapping("/createSession")
-    public ResponseEntity<?> postStravaSession(@RequestBody CreationTrainingSessionRequest sessionReq) {
-        // Ejemplo: sessionReq podría contener userId, title, sport, distance, etc.
-        try {
-            // Buscar user en tu repositorio (a través del servicio) si no lo recibes como objeto
-            // Supongamos que la request te da un userId
-            User user = null; // Por ejemplo: userService.findUserById(sessionReq.getUserId())
-                              // (Necesitarías un método findById en userService)
-
-            // Hardcode de ejemplo, deberás adaptarlo
-            user = new User();
-            user.setIdUser(1L);
-            user.setEmail("fake@email");
-            user.setName("FakeName");
-
-            TrainingSession newSession = trainingSessionService.createTrainingSession(
+        @GetMapping
+        public ResponseEntity<List<TrainingSessionDTO>> getBetween(
+                @RequestHeader("Authorization") String token,
+                @Valid DateRangeDTO range) {
+            User user = userService.getUserFromToken(token);
+            List<TrainingSessionDTO> list = sessionService.getBetween(
                     user,
-                    sessionReq.getTitle(),
-                    sessionReq.getSport(),
-                    sessionReq.getDistance(),
-                    sessionReq.getStartDate(),
-                    sessionReq.getStartTime(),
-                    sessionReq.getDuration()
+                    range.getFrom().atStartOfDay(),
+                    range.getTo().atTime(23, 59)
             );
-            return ResponseEntity.ok("Session created with ID: " + newSession.getIdTrainingSesion());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.ok(list);
         }
     }
 
-    // ----------------------------------
-    //       CREACIÓN DE CHALLENGE
-    // ----------------------------------
+    @RestController
+    @RequestMapping("/challenges")
+    public static class ChallengeController {
+        private final ChallengeService challengeService;
+        private final UserService userService;
 
-    @PostMapping("/createChallenge")
-    public ResponseEntity<?> postStravaChallenge(@RequestBody CreationChallengeRequest challengeReq) {
-        try {
-            Challenge challenge = challengeService.createChallenge(
-                    challengeReq.getName(),
-                    challengeReq.getStartDate(),
-                    challengeReq.getEndDate(),
-                    challengeReq.getObjectiveValue(),
-                    challengeReq.getSport()
-            );
-            return ResponseEntity.ok("Challenge created with ID: " + challenge.getIdChallenge());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+        @Autowired
+        public ChallengeController(ChallengeService challengeService,
+                                   UserService userService) {
+            this.challengeService = challengeService;
+            this.userService = userService;
         }
-    }
 
-    // ----------------------------------
-    //     ACEPTAR UN CHALLENGE
-    // ----------------------------------
-
-    @PostMapping("/acceptChallenge")
-    public ResponseEntity<?> postAcceptChallenge(@RequestBody AcceptChallengeRequest acceptReq) {
-        try {
-            // Igual que antes, necesitas buscar el User y Challenge por ID
-            // con userService / challengeService. 
-            // Aquí para simplificar, supongamos que tenemos user y challenge "ya" disponibles.
-            User user = new User();
-            user.setIdUser(acceptReq.getUserId());
-
-            Challenge challenge = new Challenge();
-            challenge.setIdChallenge(acceptReq.getChallengeId());
-
-            ChallengeAcceptance acceptance = challengeService.joinChallenge(user, challenge);
-            return ResponseEntity.ok("Challenge accepted with ID: " + acceptance.getIdChallengeAcceptance());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+        @PostMapping
+        public ResponseEntity<ChallengeDTO> create(
+                @RequestHeader("Authorization") String token,
+                @Valid @RequestBody ChallengeCreateDTO dto) {
+            userService.getUserFromToken(token);
+            ChallengeDTO created = challengeService.create(dto);
+            return ResponseEntity.ok(created);
         }
-    }
 
-    // ----------------------------------
-    //     OBTENER SESIONES
-    // ----------------------------------
-
-    @GetMapping("/sesion")
-    public ResponseEntity<?> getSesions(@RequestParam Long userId) {
-        try {
-            // Ejemplo: traemos todas o las últimas N
-            // Un user real se buscaría: userService.findById(userId)
-            User user = new User();
-            user.setIdUser(userId);
-
-            List<TrainingSession> sessions = trainingSessionService.getLatestSessions(user, 10);
-            return ResponseEntity.ok(sessions);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+        @GetMapping("/active")
+        public ResponseEntity<List<ChallengeDTO>> getActive(
+                @RequestHeader("Authorization") String token,
+                @RequestParam(defaultValue = "5") int limit) {
+            userService.getUserFromToken(token);
+            List<ChallengeDTO> list = challengeService.getActive(limit);
+            return ResponseEntity.ok(list);
         }
-    }
 
-    // ----------------------------------
-    //     OBTENER CHALLENGES
-    // ----------------------------------
-
-    @GetMapping("/challenges")
-    public ResponseEntity<?> getChallenges() {
-        try {
-            // Llamamos a challengeService.listActiveChallenges()
-            List<Challenge> activeChallenges = challengeService.listActiveChallenges();
-            return ResponseEntity.ok(activeChallenges);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+        @PostMapping("/{id}/join")
+        public ResponseEntity<Void> join(
+                @RequestHeader("Authorization") String token,
+                @PathVariable Long id) {
+            User user = userService.getUserFromToken(token);
+            challengeService.join(user, id);
+            return ResponseEntity.noContent().build();
         }
-    }
 
-    // ----------------------------------
-    //  OBTENER CHALLENGES ACEPTADOS
-    // ----------------------------------
-
-    @GetMapping("/acceptedChallenges")
-    public ResponseEntity<?> getAcceptedChallenges(@RequestParam Long userId) {
-        try {
-            // Buscar user real o instanciarlo
-            User user = new User();
-            user.setIdUser(userId);
-
-            List<Challenge> accepted = challengeService.getAcceptedChallenges(user);
-            return ResponseEntity.ok(accepted);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+        @GetMapping("/accepted")
+        public ResponseEntity<List<UserChallengeDTO>> getUserChallenges(
+                @RequestHeader("Authorization") String token) {
+            User user = userService.getUserFromToken(token);
+            List<UserChallengeDTO> list = challengeService.getUserChallenges(user);
+            return ResponseEntity.ok(list);
         }
     }
 }

@@ -1,38 +1,43 @@
 package es.deusto.sd.strava.entity;
 
-import java.util.Date;
+import jakarta.persistence.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 
+@Entity
+@Table(name = "challenge_acceptances")
 public class ChallengeAcceptance {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    private Long idChallengeAcceptance;
-    private Date acceptanceDate;
+    @Column(name = "accepted_at", nullable = false)
+    private LocalDateTime acceptedAt;
 
-    // Como no usas BBDD, puedes modelar relaciones como simples referencias
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "challenge_id", nullable = false)
     private Challenge challenge;
 
-    public ChallengeAcceptance() {
+    //GETTERS Y SETTERS
+    public Long getId() {
+        return id;
     }
 
-    public ChallengeAcceptance(Long idChallengeAcceptance, Date acceptanceDate) {
-        this.idChallengeAcceptance = idChallengeAcceptance;
-        this.acceptanceDate = acceptanceDate;
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    public Long getIdChallengeAcceptance() {
-        return idChallengeAcceptance;
+    public LocalDateTime getAcceptedAt() {
+        return acceptedAt;
     }
 
-    public void setIdChallengeAcceptance(Long idChallengeAcceptance) {
-        this.idChallengeAcceptance = idChallengeAcceptance;
-    }
-
-    public Date getAcceptanceDate() {
-        return acceptanceDate;
-    }
-
-    public void setAcceptanceDate(Date acceptanceDate) {
-        this.acceptanceDate = acceptanceDate;
+    public void setAcceptedAt(LocalDateTime acceptedAt) {
+        this.acceptedAt = acceptedAt;
     }
 
     public User getUser() {
@@ -49,11 +54,5 @@ public class ChallengeAcceptance {
 
     public void setChallenge(Challenge challenge) {
         this.challenge = challenge;
-    }
-
-    public double calculateProgress(){
-        // La lógica real la puedes centralizar luego en un servicio
-        double progress = 0.0;
-        return progress;
-    }
+    }    
 }

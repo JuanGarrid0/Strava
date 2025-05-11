@@ -1,44 +1,51 @@
 package es.deusto.sd.strava.entity;
 
-import java.util.Date;
+import jakarta.persistence.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 
+@Entity
+@Table(name = "tokens")
 public class Token {
-    private long idToken;
-    private String valueToken;
-    private Date creationDate;
+    @Id
+    @GeneratedValue (strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "value", nullable = false, unique = true)
+    private String value;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
+
+    @ManyToOne (fetch = FetchType.LAZY)
+    @JoinColumn (name = "user_id", nullable = false)
     private User user;
 
-    public Token() {
+    //GETTERS Y SETTERS
+
+    public Long getId() {
+        return id;
     }
 
-    public Token(long idToken, String valueToken, Date creationDate) {
-        this.idToken = idToken;
-        this.valueToken = valueToken;
-        this.creationDate = creationDate;
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    public long getIdToken() {
-        return idToken;
+    public String getValue() {
+        return value;
     }
 
-    public void setIdToken(long idToken) {
-        this.idToken = idToken;
+    public void setValue(String value) {
+        this.value = value;
     }
 
-    public String getValueToken() {
-        return valueToken;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public void setValueToken(String valueToken) {
-        this.valueToken = valueToken;
-    }
-
-    public Date getCreationDate() {
-        return creationDate;
-    }
-
-    public void setCreationDate(Date creationDate) {
-        this.creationDate = creationDate;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     public User getUser() {

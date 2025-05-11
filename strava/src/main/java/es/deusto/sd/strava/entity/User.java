@@ -1,43 +1,52 @@
 package es.deusto.sd.strava.entity;
 
-import java.util.Date;
+import jakarta.persistence.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 
+@Entity
+@Table (name="users")
 public class User {
-    private Long idUser;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, unique = true)
     private String email;
-    private Date birthdate;
-    private double weight;
-    private int height;
-    private double maxHearRate;
-    private double normalHeartRate;
+
+    @Column(nullable = false)
     private String name;
-    private String password;
+    
+    @Column (name = "birth_date", nullable = false)
+    private LocalDate birthdate;
 
-    // Ejemplo de contador interno (no recomendable para producción)
-    private static long contador = 1;
+    private Double weight;
+    private Integer height;
 
-    public User() {
+    @Column (name = "max_heart_rate")
+    private Integer maxHearRate;
+
+    @Column(name = "rest_heart_rate")
+    private Integer restHeartRate;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Token> tokens;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TrainingSession> sessions;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ChallengeAcceptance> acceptances;
+
+    //GETTERS Y SETTERS, NO HAY CONSTRUCTORES
+
+    public Long getId() {
+        return id;
     }
 
-    public User(String email, Date birthdate, double weight, int height, double maxHearRate, double normalHeartRate,
-                String name, String password) {
-        this.email = email;
-        this.birthdate = birthdate;
-        this.weight = weight;
-        this.height = height;
-        this.maxHearRate = maxHearRate;
-        this.normalHeartRate = normalHeartRate;
-        this.name = name;
-        this.password = password;
-        this.idUser = contador++;
-    }
-
-    public Long getIdUser() {
-        return idUser;
-    }
-
-    public void setIdUser(Long idUser) {
-        this.idUser = idUser;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getEmail() {
@@ -48,46 +57,6 @@ public class User {
         this.email = email;
     }
 
-    public Date getBirthdate() {
-        return birthdate;
-    }
-
-    public void setBirthdate(Date birthdate) {
-        this.birthdate = birthdate;
-    }
-
-    public double getWeight() {
-        return weight;
-    }
-
-    public void setWeight(double weight) {
-        this.weight = weight;
-    }
-
-    public int getHeight() {
-        return height;
-    }
-
-    public void setHeight(int height) {
-        this.height = height;
-    }
-
-    public double getMaxHearRate() {
-        return maxHearRate;
-    }
-
-    public void setMaxHearRate(double maxHearRate) {
-        this.maxHearRate = maxHearRate;
-    }
-
-    public double getNormalHeartRate() {
-        return normalHeartRate;
-    }
-
-    public void setNormalHeartRate(double normalHeartRate) {
-        this.normalHeartRate = normalHeartRate;
-    }
-
     public String getName() {
         return name;
     }
@@ -96,11 +65,68 @@ public class User {
         this.name = name;
     }
 
-    public String getPassword() {
-        return password;
+    public LocalDate getBirthdate() {
+        return birthdate;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public void setBirthdate(LocalDate birthdate) {
+        this.birthdate = birthdate;
     }
+
+    public Double getWeight() {
+        return weight;
+    }
+
+    public void setWeight(Double weight) {
+        this.weight = weight;
+    }
+
+    public Integer getHeight() {
+        return height;
+    }
+
+    public void setHeight(Integer height) {
+        this.height = height;
+    }
+
+    public Integer getMaxHearRate() {
+        return maxHearRate;
+    }
+
+    public void setMaxHearRate(Integer maxHearRate) {
+        this.maxHearRate = maxHearRate;
+    }
+
+    public Integer getRestHeartRate() {
+        return restHeartRate;
+    }
+
+    public void setRestHeartRate(Integer restHeartRate) {
+        this.restHeartRate = restHeartRate;
+    }
+
+    public List<Token> getTokens() {
+        return tokens;
+    }
+
+    public void setTokens(List<Token> tokens) {
+        this.tokens = tokens;
+    }
+
+    public List<TrainingSession> getSessions() {
+        return sessions;
+    }
+
+    public void setSessions(List<TrainingSession> sessions) {
+        this.sessions = sessions;
+    }
+
+    public List<ChallengeAcceptance> getAcceptances() {
+        return acceptances;
+    }
+
+    public void setAcceptances(List<ChallengeAcceptance> acceptances) {
+        this.acceptances = acceptances;
+    }
+
 }

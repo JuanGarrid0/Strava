@@ -1,43 +1,43 @@
 package es.deusto.sd.strava.entity;
 
-import java.util.Date;
+import jakarta.persistence.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
+@Entity
+@Table(name = "training_sessions")
 public class TrainingSession {
-    private long idTrainingSesion;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
     private String title;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Sport sport;
-    private double distance;
-    private Date startDate;
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
-    private Date endDate;
-    private int duration;
+
+    @Column(nullable = false)
+    private Double distance;
+
+    @Column(nullable = false)
+    private LocalDateTime start;
+
+    @Column(nullable = false)
+    private Integer durationMinutes;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    public TrainingSession() {
+    public Long getId() {
+        return id;
     }
 
-    public TrainingSession(long idTrainingSesion, String title, Sport sport, double distance, Date startDate,
-                           LocalDateTime startTime, LocalDateTime endTime, Date endDate, int duration, User user) {
-        this.idTrainingSesion = idTrainingSesion;
-        this.title = title;
-        this.sport = sport;
-        this.distance = distance;
-        this.startDate = startDate;
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.endDate = endDate;
-        this.duration = duration;
-        this.user = user;
-    }
-
-    public long getIdTrainingSesion() {
-        return idTrainingSesion;
-    }
-
-    public void setIdTrainingSesion(long idTrainingSesion) {
-        this.idTrainingSesion = idTrainingSesion;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getTitle() {
@@ -56,52 +56,28 @@ public class TrainingSession {
         this.sport = sport;
     }
 
-    public double getDistance() {
+    public Double getDistance() {
         return distance;
     }
 
-    public void setDistance(double distance) {
+    public void setDistance(Double distance) {
         this.distance = distance;
     }
 
-    public Date getStartDate() {
-        return startDate;
+    public LocalDateTime getStart() {
+        return start;
     }
 
-    public void setStartDate(Date startDate) {
-        this.startDate = startDate;
+    public void setStart(LocalDateTime start) {
+        this.start = start;
     }
 
-    public LocalDateTime getStartTime() {
-        return startTime;
+    public Integer getDurationMinutes() {
+        return durationMinutes;
     }
 
-    public void setStartTime(LocalDateTime startTime) {
-        this.startTime = startTime;
-    }
-
-    public LocalDateTime getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(LocalDateTime endTime) {
-        this.endTime = endTime;
-    }
-
-    public Date getEndDate() {
-        return endDate;
-    }
-
-    public void setEndDate(Date endDate) {
-        this.endDate = endDate;
-    }
-
-    public int getDuration() {
-        return duration;
-    }
-
-    public void setDuration(int duration) {
-        this.duration = duration;
+    public void setDurationMinutes(Integer durationMinutes) {
+        this.durationMinutes = durationMinutes;
     }
 
     public User getUser() {
@@ -111,4 +87,7 @@ public class TrainingSession {
     public void setUser(User user) {
         this.user = user;
     }
+
+    //GETTERS Y SETTERS
+    
 }

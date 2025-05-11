@@ -1,72 +1,62 @@
 package es.deusto.sd.strava.service;
 
-import es.deusto.sd.strava.entity.Token;
-import es.deusto.sd.strava.entity.User;
-import es.deusto.sd.strava.repository.TokenRepository;
-import es.deusto.sd.strava.repository.UserRepository;
+import es.deusto.sd.strava.dao.*;
+import es.deusto.sd.strava.dto.*;
+import es.deusto.sd.strava.entity.*;
+import es.deusto.sd.strava.mapper.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
+import java.util.stream.Collectors;
 
+@Service
 public class UserService {
+    private final UserDao userDao;
+    private final TokenDao tokenDao;
+    private final UserMapper userMapper;
 
-    private final UserRepository userRepository;
-    private final TokenRepository tokenRepository;
-
-    public UserService(UserRepository userRepository,
-                       TokenRepository tokenRepository) {
-        this.userRepository = userRepository;
-        this.tokenRepository = tokenRepository;
+    @Autowired
+    public UserService(UserDao userDao, TokenDao tokenDao, UserMapper userMapper) {
+        this.userDao = userDao;
+        this.tokenDao = tokenDao;
+        this.userMapper = userMapper;
     }
 
-    /**
-     * Registers a new user by "validating" email with external service (dummy check here).
-     */
-    public User registerUser(String email,
-                             String name,
-                             boolean isValidFromExternalService) {
-        if (!isValidFromExternalService) {
-            throw new IllegalArgumentException("Email not validated by external provider.");
+    @Transactional
+    public UserProfileDTO register(UserRegisterDTO dto) {
+        // TODO: validate with external provider based on dto.getProvider()
+        if (userDao.existsByEmail(dto.getEmail())) {
+            throw new IllegalArgumentException("Email already registered");
         }
-
-        if (userRepository.existsByEmail(email)) {
-            throw new IllegalStateException("User with email " + email + " already exists.");
-        }
-
-        User newUser = new User();
-        newUser.setEmail(email);
-        newUser.setName(name);
-        // (Opcional) set other fields
-        return userRepository.save(newUser);
+        User user = userMapper.toEntity(dto);
+        User saved = userDao.save(user);
+        return userMapper.toDto(saved);
     }
 
-    /**
-     * Logs in by verifying credentials externally, then creating a new Token.
-     */
-    public Token loginUser(String email, String password, boolean isAuthFromExternal) {
-        if (!isAuthFromExternal) {
-            throw new IllegalArgumentException("Invalid credentials from external provider.");
+    @Transactional
+    public TokenDTO login(UserLoginDTO dto) {
+        // TODO: validate credentials with external provider
+        Optional<User> opt = userDao.findByEmail(dto.getEmail());
+        if (opt.isEmpty()) {
+            throw new IllegalArgumentException("User not found");
         }
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found."));
-
+        User user = opt.get();
         Token token = new Token();
-        token.setValueToken(UUID.randomUUID().toString());
-        token.setCreationDate(Date.from(Instant.now()));
+        token.setValue(String.valueOf(System.currentTimeMillis()));
+        token.setCreatedAt(LocalDateTime.now());
         token.setUser(user);
-
-        return tokenRepository.save(token);
+        Token saved = tokenDao.save(token);
+        return userMapper.toDto(saved);
     }
 
-    /**
-     * Invalidates a token by removing it from the in-memory storage.
-     */
-    public void logoutUser(String tokenValue) {
-        // Nota: en tu repositorio en memoria, el método se llama findByValueToken(...)
-        Optional<Token> existingToken = tokenRepository.findByValueToken(tokenValue);
-        existingToken.ifPresent(token -> tokenRepository.deleteById(token.getIdToken()));
+    @Transactional
+    public void logout(String tokenValue) {
+        tokenDao.deleteByValue(tokenValue);
     }
 }

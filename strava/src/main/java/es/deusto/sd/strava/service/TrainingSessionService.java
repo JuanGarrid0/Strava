@@ -1,57 +1,49 @@
 package es.deusto.sd.strava.service;
 
-import es.deusto.sd.strava.entity.Sport;
-import es.deusto.sd.strava.entity.TrainingSession;
-import es.deusto.sd.strava.entity.User;
-import es.deusto.sd.strava.repository.TrainingSessionRepository;
+import es.deusto.sd.strava.dao.*;
+import es.deusto.sd.strava.dto.*;
+import es.deusto.sd.strava.entity.*;
+import es.deusto.sd.strava.mapper.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
+@Service
 public class TrainingSessionService {
+    private final TrainingSessionDao sessionDao;
+    private final TrainingSessionMapper sessionMapper;
 
-    private final TrainingSessionRepository trainingSessionRepository;
-
-    public TrainingSessionService(TrainingSessionRepository trainingSessionRepository) {
-        this.trainingSessionRepository = trainingSessionRepository;
+    @Autowired
+    public TrainingSessionService(TrainingSessionDao sessionDao, TrainingSessionMapper sessionMapper) {
+        this.sessionDao = sessionDao;
+        this.sessionMapper = sessionMapper;
     }
 
-    /**
-     * Creates a new TrainingSession for the given user.
-     */
-    public TrainingSession createTrainingSession(User user,
-                                                 String title,
-                                                 Sport sport,
-                                                 double distance,
-                                                 Date startDate,
-                                                 LocalDateTime startTime,
-                                                 int duration) {
-        TrainingSession session = new TrainingSession();
+    public TrainingSessionDTO create(TrainingSessionCreateDTO dto, User user) {
+        TrainingSession session = sessionMapper.toEntity(dto);
         session.setUser(user);
-        session.setTitle(title);
-        session.setSport(sport);
-        session.setDistance(distance);
-        session.setStartDate(startDate);
-        session.setStartTime(startTime);
-        session.setDuration(duration);
-
-        return trainingSessionRepository.save(session);
+        TrainingSession saved = sessionDao.save(session);
+        return sessionMapper.toDto(saved);
     }
 
-    /**
-     * Returns the latest N sessions for a user, ordered by date/time descending.
-     */
-    public List<TrainingSession> getLatestSessions(User user, int limit) {
-        // Llamamos al método para orden descendente:
-        List<TrainingSession> sessions = trainingSessionRepository.findByUserOrderByStartDateDesc(user);
-        return sessions.stream().limit(limit).toList();
+    public List<TrainingSessionDTO> getLatest(User user, int limit) {
+        return sessionDao.findLatestByUser(user, PageRequest.of(0, limit))
+                .stream()
+                .map(sessionMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    /**
-     * Returns all sessions for a user between two dates.
-     */
-    public List<TrainingSession> getSessionsBetweenDates(User user, Date startDate, Date endDate) {
-        return trainingSessionRepository.findByUserAndStartDateBetween(user, startDate, endDate);
+    public List<TrainingSessionDTO> getBetween(User user, LocalDateTime from, LocalDateTime to) {
+        return sessionDao.findByUserAndDateRange(user, from, to)
+                .stream()
+                .map(sessionMapper::toDto)
+                .collect(Collectors.toList());
     }
 }

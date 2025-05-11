@@ -3,6 +3,7 @@ package es.deusto.sd.strava.service;
 import es.deusto.sd.strava.dao.UserDao;
 import es.deusto.sd.strava.dto.*;
 import es.deusto.sd.strava.entity.User;
+import es.deusto.sd.strava.external.google.GoogleDao;
 import es.deusto.sd.strava.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,17 +17,29 @@ public class UserService {
     private final UserDao userDao;
     private final TokenService tokenService;
     private final UserMapper userMapper;
+    private final GoogleDao googleDao;
 
     @Autowired
-    public UserService(UserDao userDao, TokenService tokenService, UserMapper userMapper) {
+    public UserService(UserDao userDao,
+                       TokenService tokenService,
+                       UserMapper userMapper,
+                       GoogleDao googleDao) {
         this.userDao = userDao;
         this.tokenService = tokenService;
         this.userMapper = userMapper;
+        this.googleDao = googleDao;
     }
 
     @Transactional
     public UserProfileDTO register(UserRegisterDTO dto) {
-        // TODO: validate with external provider
+        // Validate email with Google if provider is GOOGLE
+        if (dto.getProvider() == AuthProvider.GOOGLE) {
+            if (!googleDao.validateEmail(dto.getEmail())) {
+                throw new IllegalArgumentException("Email not registered with Google");
+            }
+        }
+        // TODO: add Meta validation when MetaDao is available
+
         if (userDao.existsByEmail(dto.getEmail())) {
             throw new IllegalArgumentException("Email already registered");
         }
@@ -37,7 +50,14 @@ public class UserService {
 
     @Transactional
     public TokenDTO login(UserLoginDTO dto) {
-        // TODO: validate credentials with external provider
+        // Validate login with Google if provider is GOOGLE
+        if (dto.getProvider() == AuthProvider.GOOGLE) {
+            if (!googleDao.validateEmail(dto.getEmail())) {
+                throw new IllegalArgumentException("Invalid Google credentials");
+            }
+        }
+        // TODO: add Meta authentication when MetaDao is available
+
         Optional<User> opt = userDao.findByEmail(dto.getEmail());
         if (opt.isEmpty()) {
             throw new IllegalArgumentException("User not found");
@@ -55,6 +75,9 @@ public class UserService {
         tokenService.revokeToken(token);
     }
 
+    /**
+     * Retrieves the User associated with a valid token or throws if invalid.
+     */
     public User getUserFromToken(String token) {
         return tokenService.getUser(token)
                 .orElseThrow(() -> new SecurityException("Invalid or expired token"));

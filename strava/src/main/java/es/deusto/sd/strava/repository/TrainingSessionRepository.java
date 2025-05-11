@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+//PAGINACIÓN PARA ÚLTIMAS SESIONES Y FILTRADO POR RANGO DE FECHAS
 public interface TrainingSessionRepository extends JpaRepository<TrainingSession, Long> {
     Page<TrainingSession> findByUserOrderByStartDesc(User user, Pageable pageable);
     List<TrainingSession> findByUserAndStartBetween(User user,

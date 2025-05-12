@@ -1,4 +1,4 @@
-package es.deusto.sd.strava.external.google;
+package es.deusto.sd.strava.dao;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;

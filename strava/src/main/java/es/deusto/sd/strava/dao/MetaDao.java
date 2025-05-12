@@ -1,4 +1,4 @@
-package es.deusto.sd.strava.external.meta;
+package es.deusto.sd.strava.dao;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;

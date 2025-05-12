@@ -1,10 +1,10 @@
 package es.deusto.sd.strava.service;
 
+import es.deusto.sd.strava.dao.GoogleDao;
+import es.deusto.sd.strava.dao.MetaDao;
 import es.deusto.sd.strava.dao.UserDao;
 import es.deusto.sd.strava.dto.*;
 import es.deusto.sd.strava.entity.User;
-import es.deusto.sd.strava.external.google.GoogleDao;
-import es.deusto.sd.strava.external.meta.MetaDao;
 import es.deusto.sd.strava.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

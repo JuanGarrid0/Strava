@@ -4,10 +4,8 @@ import es.deusto.sd.strava.dao.*;
 import es.deusto.sd.strava.dto.*;
 import es.deusto.sd.strava.entity.*;
 import es.deusto.sd.strava.mapper.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,7 +17,6 @@ public class ChallengeService {
     private final ChallengeAcceptanceDao acceptanceDao;
     private final ChallengeMapper challengeMapper;
 
-    @Autowired
     public ChallengeService(ChallengeDao challengeDao,
                              ChallengeAcceptanceDao acceptanceDao,
                              ChallengeMapper challengeMapper) {

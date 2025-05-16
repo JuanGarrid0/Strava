@@ -5,10 +5,8 @@ import es.deusto.sd.strava.dto.*;
 import es.deusto.sd.strava.entity.User;
 import es.deusto.sd.strava.service.*;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -19,7 +17,6 @@ public class Controller {
     public static class UserController {
         private final UserService userService;
 
-        @Autowired
         public UserController(UserService userService) {
             this.userService = userService;
         }
@@ -52,7 +49,6 @@ public class Controller {
         private final TrainingSessionService sessionService;
         private final UserService userService;
 
-        @Autowired
         public TrainingSessionController(TrainingSessionService sessionService,
                                          UserService userService) {
             this.sessionService = sessionService;
@@ -97,7 +93,6 @@ public class Controller {
         private final ChallengeService challengeService;
         private final UserService userService;
 
-        @Autowired
         public ChallengeController(ChallengeService challengeService,
                                    UserService userService) {
             this.challengeService = challengeService;

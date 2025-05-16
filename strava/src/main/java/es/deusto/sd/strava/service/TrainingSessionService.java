@@ -4,10 +4,8 @@ import es.deusto.sd.strava.dao.*;
 import es.deusto.sd.strava.dto.*;
 import es.deusto.sd.strava.entity.*;
 import es.deusto.sd.strava.mapper.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,7 +15,6 @@ public class TrainingSessionService {
     private final TrainingSessionDao sessionDao;
     private final TrainingSessionMapper sessionMapper;
 
-    @Autowired
     public TrainingSessionService(TrainingSessionDao sessionDao, TrainingSessionMapper sessionMapper) {
         this.sessionDao = sessionDao;
         this.sessionMapper = sessionMapper;

@@ -2,7 +2,6 @@ package es.deusto.sd.strava.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity

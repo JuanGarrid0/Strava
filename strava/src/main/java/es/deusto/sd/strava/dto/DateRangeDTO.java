@@ -9,8 +9,20 @@ public class DateRangeDTO {
     private LocalDate from;
     @NotNull
     private LocalDate to;
+    @NotNull
+    private String name;
+
+
 
     //getters and setters
+
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+    
     public LocalDate getFrom() {
         return from;
     }

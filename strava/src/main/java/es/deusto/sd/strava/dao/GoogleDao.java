@@ -22,6 +22,7 @@ public class GoogleDao {
     public boolean validateEmail(String email) {
         String url = googleUrl + "/validate?email=" + email;
         ResponseEntity<Boolean> resp = restTemplate.getForEntity(url, Boolean.class);
-        return resp.getBody() != null && resp.getBody();
+        Boolean body = resp.getBody();
+        return body != null && body;
     }
 }

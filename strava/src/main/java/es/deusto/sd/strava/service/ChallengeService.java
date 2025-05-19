@@ -1,11 +1,16 @@
 package es.deusto.sd.strava.service;
 
-import es.deusto.sd.strava.dao.*;
-import es.deusto.sd.strava.dto.*;
-import es.deusto.sd.strava.entity.*;
+import es.deusto.sd.strava.dao.ChallengeDao;
+import es.deusto.sd.strava.dto.ChallengeCreateDTO;
+import es.deusto.sd.strava.dto.ChallengeDTO;
+import es.deusto.sd.strava.dto.UserChallengeDTO;
+import es.deusto.sd.strava.entity.Challenge;
+import es.deusto.sd.strava.entity.ChallengeAcceptance;
+import es.deusto.sd.strava.entity.User;
 import es.deusto.sd.strava.mapper.ChallengeMapper;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,47 +18,43 @@ import java.util.stream.Collectors;
 
 @Service
 public class ChallengeService {
-    private final ChallengeDao challengeDao;
-    private final ChallengeAcceptanceDao acceptanceDao;
-    private final ChallengeMapper challengeMapper;
 
-    public ChallengeService(ChallengeDao challengeDao,
-                             ChallengeAcceptanceDao acceptanceDao,
-                             ChallengeMapper challengeMapper) {
-        this.challengeDao = challengeDao;
-        this.acceptanceDao = acceptanceDao;
-        this.challengeMapper = challengeMapper;
+    private final ChallengeDao dao;
+    private final ChallengeMapper mapper;
+
+    public ChallengeService(ChallengeDao dao, ChallengeMapper mapper) {
+        this.dao = dao;
+        this.mapper = mapper;
     }
 
+    @Transactional
     public ChallengeDTO create(ChallengeCreateDTO dto) {
-        Challenge challenge = challengeMapper.toEntity(dto);
-        Challenge saved = challengeDao.save(challenge);
-        return challengeMapper.toDto(saved);
+        Challenge challenge = mapper.toEntity(dto);
+        Challenge saved = dao.save(challenge);
+        return mapper.toDto(saved);
     }
 
     public List<ChallengeDTO> getActive(int limit) {
-        return challengeDao.findActive(LocalDate.now(), PageRequest.of(0, limit))
-                .stream()
-                .map(challengeMapper::toDto)
-                .collect(Collectors.toList());
+        return dao.findActive(LocalDate.now(), PageRequest.of(0, limit))
+                  .stream()
+                  .map(mapper::toDto)
+                  .collect(Collectors.toList());
     }
 
+   @Transactional
     public void join(User user, Long challengeId) {
-        Challenge challenge = challengeDao.findById(challengeId)
-                .orElseThrow(() -> new IllegalArgumentException("Challenge not found"));
-        if (!acceptanceDao.existsByUserAndChallenge(user, challenge)) {
-            ChallengeAcceptance ca = new ChallengeAcceptance();
-            ca.setUser(user);
-            ca.setChallenge(challenge);
-            ca.setAcceptedAt(LocalDateTime.now());
-            acceptanceDao.save(ca);
-        }
+        Challenge ch = dao.findById(challengeId);
+        ChallengeAcceptance acc = new ChallengeAcceptance();
+        acc.setUser(user);
+        acc.setChallenge(ch);
+        // ← Aquí inicializamos el campo no-null
+        acc.setAcceptedAt(LocalDateTime.now());
+        dao.saveAcceptance(acc);
     }
-
     public List<UserChallengeDTO> getUserChallenges(User user) {
-        return acceptanceDao.findByUser(user)
-                .stream()
-                .map(challengeMapper::toUserChallengeDto)
-                .collect(Collectors.toList());
+        List<ChallengeAcceptance> accs = dao.findByUser(user);
+        return accs.stream()
+                   .map(mapper::toUserChallengeDto)
+                   .collect(Collectors.toList());
     }
 }

@@ -9,8 +9,14 @@ import java.util.List;
 
 //PAGINACIÓN PARA ÚLTIMAS SESIONES Y FILTRADO POR RANGO DE FECHAS
 public interface TrainingSessionRepository extends JpaRepository<TrainingSession, Long> {
+    /**
+     * Recupera páginas de sesiones ordenadas por fecha de inicio descendente.
+     */
     Page<TrainingSession> findByUserOrderByStartDesc(User user, Pageable pageable);
-    List<TrainingSession> findByUserAndStartBetween(User user,
-                                                   LocalDateTime start,
-                                                   LocalDateTime end);
+
+    /**
+     * Recupera todas las sesiones de usuario entre dos fechas, orden descendente.
+     */
+    List<TrainingSession> findByUserAndStartBetweenOrderByStartDesc(
+        User user, LocalDateTime start, LocalDateTime end);
 }

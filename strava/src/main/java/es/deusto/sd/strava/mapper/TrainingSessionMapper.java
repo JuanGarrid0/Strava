@@ -4,9 +4,11 @@ import es.deusto.sd.strava.dto.*;
 import es.deusto.sd.strava.entity.*;
 import org.mapstruct.Mapper;
 
-
 @Mapper(componentModel = "spring")
 public interface TrainingSessionMapper {
+    /** Convierte DTO de creación a entidad. */
     TrainingSession toEntity(TrainingSessionCreateDTO dto);
-    TrainingSessionDTO toDto(TrainingSession entity);
+
+    /** Convierte entidad a DTO de respuesta. */
+    TrainingSessionDTO toDto(TrainingSession ts);
 }

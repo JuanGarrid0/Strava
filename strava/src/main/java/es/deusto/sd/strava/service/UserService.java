@@ -6,6 +6,9 @@ import es.deusto.sd.strava.dao.UserDao;
 import es.deusto.sd.strava.dto.*;
 import es.deusto.sd.strava.entity.User;
 import es.deusto.sd.strava.mapper.UserMapper;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
@@ -13,6 +16,7 @@ import java.util.Optional;
 
 @Service
 public class UserService {
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
     private final UserDao userDao;
     private final TokenService tokenService;
     private final UserMapper userMapper;
@@ -31,23 +35,43 @@ public class UserService {
         this.metaDao = metaDao;
     }
 
+
     @Transactional
     public UserProfileDTO register(UserRegisterDTO dto) {
-        // Validate email with external provider
+        log.info("→ Register Strava para email='{}' con provider={}", dto.getEmail(), dto.getProvider());
+
+        // --- Proveedor Google: auto‐registro en caso de que no exista aún ---
         if (dto.getProvider() == AuthProvider.GOOGLE) {
-            if (!googleDao.validateEmail(dto.getEmail())) {
-                throw new IllegalArgumentException("Email not registered with Google");
+            boolean exists = googleDao.validateEmail(dto.getEmail());
+            log.info("   GoogleDao.validateEmail('{}') = {}", dto.getEmail(), exists);
+            if (!exists) {
+                log.info("   No existe en Google: registrando automáticamente en Google");
+                // crea el usuario en google-service
+                googleDao.registerExternal(
+                    dto.getEmail(),
+                    dto.getName(),
+                    dto.getBirthDate()
+                );
             }
-        } else if (dto.getProvider() == AuthProvider.META) {
-            boolean success = metaDao.registerUser(
-                dto.getEmail(), dto.getName(), dto.getBirthDate().toString());
-            if (!success) {
+        }
+        // --- Proveedor Meta: registro explícito o fallo si ya existe ---
+        else if (dto.getProvider() == AuthProvider.META) {
+            boolean created = metaDao.registerUser(
+                dto.getEmail(),
+                dto.getName(),
+                dto.getBirthDate()
+            );
+            if (!created) {
                 throw new IllegalArgumentException("Email already registered with Meta");
             }
         }
+
+        // --- Validación local: no duplicar emails en Strava-client ---
         if (userDao.existsByEmail(dto.getEmail())) {
             throw new IllegalArgumentException("Email already registered locally");
         }
+
+        // --- Crear perfil Strava ---
         User user = userMapper.toEntity(dto);
         User saved = userDao.save(user);
         return userMapper.toDto(saved);

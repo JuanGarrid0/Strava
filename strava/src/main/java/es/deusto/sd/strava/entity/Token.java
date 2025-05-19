@@ -10,7 +10,7 @@ public class Token {
     @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "value", nullable = false, unique = true)
+    @Column(name = "token_value", nullable = false, unique = true)
     private String value;
 
     @Column(name = "created_at", nullable = false)

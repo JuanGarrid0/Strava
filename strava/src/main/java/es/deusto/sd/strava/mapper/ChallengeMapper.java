@@ -1,9 +1,12 @@
 package es.deusto.sd.strava.mapper;
 
-import es.deusto.sd.strava.dto.*;
-import es.deusto.sd.strava.entity.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import es.deusto.sd.strava.dto.ChallengeCreateDTO;
+import es.deusto.sd.strava.dto.ChallengeDTO;
+import es.deusto.sd.strava.dto.UserChallengeDTO;
+import es.deusto.sd.strava.entity.Challenge;
+import es.deusto.sd.strava.entity.ChallengeAcceptance;
 
 @Mapper(componentModel = "spring")
 public interface ChallengeMapper {
@@ -12,4 +15,3 @@ public interface ChallengeMapper {
     @Mapping(source = "challenge.id", target = "id")
     UserChallengeDTO toUserChallengeDto(ChallengeAcceptance acceptance);
 }
-

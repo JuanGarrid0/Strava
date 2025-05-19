@@ -3,7 +3,7 @@ package es.deusto.sd.strava.service;
 import es.deusto.sd.strava.dao.*;
 import es.deusto.sd.strava.dto.*;
 import es.deusto.sd.strava.entity.*;
-import es.deusto.sd.strava.mapper.*;
+import es.deusto.sd.strava.mapper.ChallengeMapper;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;

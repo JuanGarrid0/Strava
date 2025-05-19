@@ -1,8 +1,11 @@
 package es.deusto.sd.strava.dao;
 
+import java.time.LocalDate;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.http.ResponseEntity;
 
 @Repository
@@ -24,5 +27,19 @@ public class GoogleDao {
         ResponseEntity<Boolean> resp = restTemplate.getForEntity(url, Boolean.class);
         Boolean body = resp.getBody();
         return body != null && body;
+    }
+
+    
+    /**
+     * Si el usuario no existía, lo registra en Google automáticamente.
+     */
+    public void registerExternal(String email, String name, LocalDate birthDate) {
+        String url = UriComponentsBuilder
+            .fromHttpUrl(googleUrl + "/register")
+            .queryParam("email", email)
+            .queryParam("name", name)
+            .queryParam("birthDate", birthDate.toString())
+            .toUriString();
+        restTemplate.postForEntity(url, null, Void.class);
     }
 }
